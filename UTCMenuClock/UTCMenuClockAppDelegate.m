@@ -85,7 +85,6 @@ NSMenuItem *show24HrTimeItem;
 
 
 - (void) doDateUpdate {
-
     NSDate* date = [NSDate date];
     NSDateFormatter* UTCdf = [[[NSDateFormatter alloc] init] autorelease];
     NSDateFormatter* UTCdateDF = [[[NSDateFormatter alloc] init] autorelease];
@@ -94,6 +93,10 @@ NSMenuItem *show24HrTimeItem;
     
     NSTimeZone* UTCtz = [NSTimeZone timeZoneWithAbbreviation:@"UTC"];
 
+    [UTCdf setLocale:NSLocale.currentLocale];
+    [UTCdateDF setLocale:NSLocale.currentLocale];
+    [UTCdateShortDF setLocale:NSLocale.currentLocale];
+    [UTCdaynum setLocale:NSLocale.currentLocale];
     [UTCdf setTimeZone: UTCtz];
     [UTCdateDF setTimeZone: UTCtz];
     [UTCdateShortDF setTimeZone: UTCtz];
@@ -105,48 +108,44 @@ NSMenuItem *show24HrTimeItem;
     BOOL showTimeZone = [self fetchBooleanPreference:showTimeZonePreferenceKey];
     BOOL show24HrTime = [self fetchBooleanPreference:show24HourPreferenceKey];
     
+    if (showDate) {
+        [UTCdf setDateStyle:NSDateFormatterShortStyle];
+    } else {
+        [UTCdf setDateStyle:NSDateFormatterNoStyle];
+    }
+    
+    NSString* UTCTzString;
     if (showSeconds) {
-        if (show24HrTime){
-            [UTCdf setDateFormat: @"HH:mm:ss"];
+        UTCTzString = @"";
+        if (showTimeZone) {
+            [UTCdf setTimeStyle:NSDateFormatterLongStyle];
         } else {
-            [UTCdf setDateFormat: @"hh:mm:ss a"];
+            [UTCdf setTimeStyle:NSDateFormatterMediumStyle];
         }
     } else {
-        if (show24HrTime){
-            [UTCdf setDateFormat: @"HH:mm"];
+        [UTCdf setTimeStyle:NSDateFormatterShortStyle];
+        if (showTimeZone) {
+            UTCTzString = @" UTC";
         } else {
-            [UTCdf setDateFormat: @"hh:mm a"];
+            UTCTzString = @"";
         }
     }
     [UTCdateDF setDateStyle:NSDateFormatterFullStyle];
-    [UTCdateShortDF setDateStyle:NSDateFormatterShortStyle];
     [UTCdaynum setDateFormat:@"D/"];
 
-    NSString* UTCtimepart = [UTCdf stringFromDate: date];
+
     NSString* UTCdatepart = [UTCdateDF stringFromDate: date];
-    NSString* UTCdateShort = [UTCdateShortDF stringFromDate: date];
+    NSString* UTCstring = [UTCdf stringFromDate:date];
     NSString* UTCJulianDay;
-    NSString* UTCTzString;
-    
     
     if (showJulian) { 
         UTCJulianDay = [UTCdaynum stringFromDate: date];
     } else { 
         UTCJulianDay = @"";
     }
+        
+    [ourStatus setTitle:[NSString stringWithFormat:@"%@ %@%@", UTCstring, UTCJulianDay, UTCTzString]];
     
-    if (showTimeZone) { 
-        UTCTzString = @" UTC";
-    } else { 
-        UTCTzString = @"";
-    }
-
-    if (showDate) {
-        [ourStatus setTitle:[NSString stringWithFormat:@"%@ %@%@%@", UTCdateShort, UTCJulianDay, UTCtimepart, UTCTzString]];
-    } else {
-        [ourStatus setTitle:[NSString stringWithFormat:@"%@%@%@", UTCJulianDay, UTCtimepart, UTCTzString]];
-    }
-
     [dateMenuItem setTitle:UTCdatepart];
 
 }
